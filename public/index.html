@@ -1,1 +1,665 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f4f5f7">
+<title>جدول أوقات الدعاة</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#ffffff;
+    --line:#e7e9ee; --line-2:#d7dae1;
+    --ink:#1f2430; --ink-2:#5c6270; --ink-3:#9aa0ad;
+    --brand:#3b6ef2; --brand-deep:#274bb5; --brand-soft:#eaf0fe;
+    
+    --en:#2f8f6b; --en-soft:#e6f5ee;
+    --fr:#3f6fd6; --fr-soft:#e8eefb;
+    --km:#8b3fb0; --km-soft:#f3e8fa;
+    --off-bg:#eef0f3; --off-text:#6b7280; --off-border:#dde0e6;
+    --unknown-bg:#fbeecb; --unknown-text:#8a5a06; --unknown-border:#f0cf7f;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html{ background:var(--bg); }
+  body{ margin:0; min-height:100vh; font-family:'Tajawal','Segoe UI',Tahoma,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.6; padding-bottom:80px; }
+  .wrap{ max-width:980px; margin:0 auto; padding:0 16px; }
+
+  header{ background:var(--card); border-bottom:1px solid var(--line); padding:18px 0 0; }
+  .title-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+  h1{ font-size:21px; font-weight:800; margin:0; letter-spacing:-.3px; }
+  .sync{ font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; margin-right:6px; vertical-align:middle; }
+  .sync.saving{ background:#fbf1dd; color:#8a5a06; }
+  .sync.error{ background:#fbe4de; color:#b4432a; }
+  .adminbar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:var(--brand-soft); border:1px solid var(--brand); color:var(--brand-deep); border-radius:11px; padding:8px 12px; font-size:13px; font-weight:700; margin:0 0 12px; }
+  .adminbar .sp{ flex:1; }
+  .adminbar button{ border:1px solid var(--brand); background:var(--card); color:var(--brand-deep); border-radius:8px; padding:5px 12px; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; }
+  .adminbar button:hover{ background:var(--brand-soft); }
+  .head-actions{ display:flex; gap:8px; }
+  button{ font-family:inherit; cursor:pointer; }
+  .btn{ padding:9px 15px; border-radius:10px; border:1px solid var(--line-2); background:var(--card); color:var(--ink); font-size:13px; font-weight:600; white-space:nowrap; }
+  .btn:hover{ background:var(--bg); }
+  .btn-brand{ background:var(--brand); color:#fff; border-color:var(--brand); }
+  .btn-brand:hover{ opacity:.92; }
+
+  .controls{ display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+  .search{ position:relative; flex:1; min-width:220px; }
+  .search select{
+    width:100%; padding:11px 38px 11px 14px; border-radius:11px;
+    border:1px solid var(--line-2); background:var(--card); color:var(--ink);
+    font-size:14px; font-family:inherit; appearance:none; -webkit-appearance:none;
+  }
+  .search::after{ content:'⌄'; position:absolute; left:14px; top:50%; transform:translateY(-60%); color:var(--ink-3); font-size:18px; pointer-events:none; }
+  .search select:focus{ outline:none; border-color:var(--brand); }
+
+  .view-seg{ display:inline-flex; background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:3px; gap:2px; }
+  .view-seg button{ border:none; background:none; padding:8px 16px; border-radius:9px; font-size:13px; font-weight:700; color:var(--ink-2); }
+  .view-seg button.on{ background:var(--card); color:var(--brand-deep); box-shadow:0 1px 2px rgba(0,0,0,.06); }
+
+  .teams{ display:flex; gap:7px; flex-wrap:wrap; padding-bottom:14px; }
+  .team-chip{
+    display:flex; align-items:center; gap:7px;
+    border:1px solid var(--line-2); background:var(--card); color:var(--ink-2);
+    border-radius:22px; padding:7px 14px; font-size:13px; font-weight:700; font-family:inherit;
+  }
+  .team-chip .dot{ width:10px; height:10px; border-radius:50%; }
+  .team-chip .num{ font-size:11px; color:var(--ink-3); background:var(--bg); border-radius:10px; padding:0 7px; }
+  .team-chip.on{ color:#fff; border-color:transparent; }
+  .team-chip.on .num{ background:rgba(255,255,255,.28); color:#fff; }
+
+  .day-tabs{ display:flex; gap:5px; overflow-x:auto; padding:4px 0 12px; scrollbar-width:none; }
+  .day-tabs::-webkit-scrollbar{ display:none; }
+
+  .month-bar{ display:flex; align-items:center; gap:10px; padding:2px 0 10px; }
+  .month-bar .nav{ width:34px; height:34px; border-radius:9px; border:1px solid var(--line-2); background:var(--card); color:var(--ink); font-size:16px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .month-bar .nav:hover{ background:var(--bg); }
+  .month-bar .label{ font-size:15px; font-weight:800; min-width:130px; text-align:center; }
+  .month-bar .today-jump{ margin-right:auto; font-size:12px; font-weight:700; padding:7px 12px; border-radius:9px; border:1px solid var(--line-2); background:var(--card); color:var(--brand-deep); }
+  .month-bar .today-jump:hover{ background:var(--brand-soft); }
+  .date-tab .dnum{ display:inline-block; font-size:11px; opacity:.85; margin-right:4px; }
+  .day-tab{ padding:9px 15px; border:none; background:var(--bg); color:var(--ink-2);
+    font-size:14px; font-family:inherit; font-weight:700; border-radius:10px; white-space:nowrap; }
+  .day-tab.on{ background:var(--brand); color:#fff; }
+  .day-tab .b{ display:inline-block; background:rgba(0,0,0,.08); border-radius:9px; padding:0 7px; margin-right:5px; font-size:11px; }
+  .day-tab.on .b{ background:rgba(255,255,255,.28); }
+  .day-tab.today{ position:relative; }
+  .now-badge{ display:inline-block; background:var(--brand); color:#fff; font-size:9px; font-weight:800; border-radius:8px; padding:1px 6px; margin-left:5px; vertical-align:middle; }
+  .day-tab.on .now-badge{ background:rgba(255,255,255,.3); color:#fff; }
+
+  main{ max-width:980px; margin:0 auto; padding:16px 20px 0; }
+  .count-line{ font-size:14px; color:var(--ink-2); margin:2px 2px 14px; }
+  .count-line b{ color:var(--ink); font-weight:800; }
+
+  .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
+  .pcard{ background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px;
+    border-right:5px solid var(--team-color, var(--brand)); display:flex; gap:13px; align-items:flex-start; }
+  .pcard .clock{ flex-shrink:0; min-width:70px; text-align:center; background:var(--team-soft, var(--brand-soft)); border-radius:10px; padding:8px 6px; }
+  .pcard .clock .t{ font-size:16px; font-weight:800; color:var(--team-color); direction:ltr; }
+  .pcard .clock .p{ font-size:10px; color:var(--ink-3); margin-top:2px; }
+  .pcard .info{ flex:1; min-width:0; }
+  .pcard .nm{ font-size:15px; font-weight:800; margin-bottom:3px; }
+  .pcard .tm{ font-size:13px; color:var(--ink-2); }
+  .pcard .team-tag{ display:inline-block; font-size:10px; font-weight:700; padding:2px 9px; border-radius:20px; margin-top:6px; background:var(--team-soft); color:var(--team-color); }
+  .pcard .edit{ flex-shrink:0; height:30px; padding:0 12px; border-radius:8px; border:1px solid var(--line-2); background:var(--card); color:var(--ink-2); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; font-family:inherit; align-self:center; white-space:nowrap; }
+  .pcard .edit:hover{ background:var(--bg); }
+
+  .off-wrap{ margin-top:22px; }
+  .off-title{ font-size:13px; color:var(--ink-3); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .off-title::after{ content:''; flex:1; height:1px; background:var(--line); }
+  .off-chips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .off-chip{ font-size:12px; padding:6px 12px; border-radius:20px; background:var(--card); color:var(--ink-2); border:1px solid var(--line); cursor:pointer; display:flex; align-items:center; gap:7px; }
+  .off-chip .dot{ width:8px; height:8px; border-radius:50%; }
+
+  .table-scroll{ overflow-x:auto; border:1px solid var(--line); border-radius:14px; }
+  table{ width:100%; min-width:1140px; border-collapse:separate; border-spacing:0; background:var(--card);
+    table-layout:fixed; margin:0; }
+  thead th{ position:sticky; top:0; z-index:3; background:#2a2f3d; color:#eef0f6; font-size:12.5px; font-weight:700; padding:12px 6px; text-align:center; white-space:nowrap; }
+  thead th.name-col{ text-align:right; padding-right:14px; width:168px; position:sticky; right:0; z-index:4; }
+  thead th.today-col{ background:var(--brand); }
+  thead th.act-col{ width:66px; }
+  tbody td{ border-top:1px solid var(--line); padding:10px 8px; vertical-align:middle; font-size:12px; }
+  tbody tr:nth-child(even) td{ background:#fafbfc; }
+  tbody tr:hover td{ background:var(--brand-soft); }
+  td.name-cell{ position:sticky; right:0; z-index:2; background:var(--card); padding-right:14px; font-weight:700; font-size:13px; white-space:normal; overflow-wrap:anywhere; box-shadow:-1px 0 0 var(--line); }
+  tbody tr:nth-child(even) td.name-cell{ background:#fafbfc; }
+  tbody tr:hover td.name-cell{ background:var(--brand-soft); }
+  td.name-cell .dot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-left:7px; vertical-align:middle; }
+  td.today-col{ background:var(--brand-soft) !important; }
+  td.act-cell{ text-align:center; }
+  .cellwrap{ display:flex; flex-direction:column; gap:7px; align-items:stretch; }
+  .pill{ display:flex; flex-direction:column; gap:3px; align-items:center; justify-content:center; text-align:center; padding:12px 12px; border-radius:10px; font-size:12px; font-weight:700; line-height:1.3; border:1.5px solid transparent; min-height:46px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .pill .rl{ display:inline-flex; align-items:baseline; justify-content:center; gap:3px; direction:rtl; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .pill .rng{ direction:rtl; white-space:nowrap; }
+  .pill .tk{ direction:ltr; unicode-bidi:isolate; }
+  .pill .ap{ font-size:0.66em; font-weight:800; opacity:.82; vertical-align:super; margin:0 1px; }
+  .pill .sep2{ opacity:.6; margin:0 4px; }
+  .pill.work{ color:#fff; }
+  .pill.off{ background:var(--off-bg); color:var(--off-text); border-color:var(--off-border); }
+  .pill.unknown{ background:var(--unknown-bg); color:var(--unknown-text); border-color:var(--unknown-border); }
+  .icon-btn{ height:26px; padding:0 10px; border-radius:7px; border:1px solid var(--line-2); background:var(--card); color:var(--ink-2); display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; font-family:inherit; white-space:nowrap; }
+  .icon-btn:hover{ background:var(--bg); }
+
+  .empty{ text-align:center; color:var(--ink-3); padding:38px 10px; font-size:14px; }
+
+  .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:flex-end; justify-content:center; z-index:100; }
+  @media(min-width:520px){ .overlay{ align-items:center; padding:16px; } }
+  .sheet{ background:var(--card); width:100%; max-width:480px; border-radius:18px 18px 0 0; padding:22px 20px 24px; max-height:88vh; overflow-y:auto; }
+  @media(min-width:520px){ .sheet{ border-radius:18px; } }
+  .sheet h3{ font-size:17px; font-weight:800; margin:0 0 14px; }
+  .sheet label{ display:block; font-size:12px; color:var(--ink-2); margin:14px 0 5px; font-weight:700; }
+  .sheet input[type=text], .sheet select{ width:100%; padding:10px 11px; border-radius:10px; border:1px solid var(--line-2); background:var(--bg); color:var(--ink); font-size:14px; font-family:inherit; }
+  .drow{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .drow .dl{ width:56px; font-size:12px; color:var(--ink-2); flex-shrink:0; font-weight:700; }
+  .drow select{ width:92px; padding:8px 5px; flex-shrink:0; }
+  .drow input[type=text]{ flex:1; padding:8px 9px; font-size:12px; }
+  .sheet-foot{ display:flex; gap:9px; margin-top:16px; }
+  .sheet-foot .btn{ flex:1; text-align:center; }
+  .del-btn{ width:100%; margin-top:10px; padding:10px; border-radius:10px; border:1px solid #e6b3a4; background:transparent; color:#b4432a; font-weight:700; font-family:inherit; cursor:pointer; }
+
+  .toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff; padding:10px 20px; border-radius:22px; font-size:13px; opacity:0; transition:.25s; pointer-events:none; z-index:200; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="title-row">
+      <h1>جدول أوقات الدعاة <span class="sync" id="syncBadge" style="display:none;"></span></h1>
+      <div class="head-actions">
+        <div class="view-seg" id="viewSeg">
+          <button data-view="day" class="on">عرض اليوم</button>
+          <button data-view="table">الجدول الكامل</button>
+        </div>
+        <button class="btn" id="adminBtn">دخول الأدمن</button>
+        <button class="btn btn-brand admin-only" id="addBtn" style="display:none;">+ إضافة</button>
+        <button class="btn admin-only" id="resetBtn" style="display:none;">استعادة</button>
+      </div>
+    </div>
+
+    <div class="adminbar" id="adminBar" style="display:none;">
+      <span>وضع الأدمن مُفعّل — يمكنك التعديل</span>
+      <span class="sp"></span>
+      <button id="exportBtn">تصدير</button>
+      <button id="importBtn">استيراد</button>
+      <button id="logoutBtn">خروج</button>
+    </div>
+
+    <div class="controls">
+      <div class="search">
+        <select id="searchSelect">
+          <option value="">— ابحث / اختر اسم داعية —</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="teams" id="teams"></div>
+    <div class="month-bar" id="monthBar"></div>
+    <div class="day-tabs" id="dayTabs"></div>
+  </div>
+</header>
+
+<main>
+  <div class="count-line" id="countLine"></div>
+  <div id="dayView"></div>
+  <div id="tableView" class="hidden"></div>
+</main>
+
+<div id="modalRoot"></div>
+<div class="toast" id="toast">تم الحفظ</div>
+
+<script>
+const DAY_LABELS = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const DAY_SHORT  = ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+let DEFAULT_DATA = [];
+
+const TEAMS = {
+  en: { label:'إنجليزي', color:'var(--en)', soft:'var(--en-soft)', hex:'#2f8f6b' },
+  fr: { label:'فرنسي',   color:'var(--fr)', soft:'var(--fr-soft)', hex:'#3f6fd6' },
+  km: { label:'كمبودي',  color:'var(--km)', soft:'var(--km-soft)', hex:'#8b3fb0' }
+};
+function teamOf(it){ return TEAMS[it.lang] ? it.lang : 'en'; }
+
+let data = [];
+let nextId = 1;
+let view = 'day';
+let selectedDay = 0;
+let teamFilter = 'all';
+let editing = null;
+
+let adminToken = null;
+try { adminToken = sessionStorage.getItem('sched-token') || null; } catch(e){}
+let isAdmin = !!adminToken;
+let syncState = 'idle';
+let serverUpdatedAt = null;
+
+const MONTH_NAMES = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+let viewYear, viewMonth;      // الشهر المعروض
+let selectedDate = null;      // التاريخ المختار (كائن Date)
+
+function sameYMD(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+function daysInMonth(y,m){ return new Date(y, m+1, 0).getDate(); }
+function initDates(){
+  const now=new Date();
+  viewYear=now.getFullYear(); viewMonth=now.getMonth();
+  selectedDate=new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function todayIndex(){ return new Date().getDay(); }
+function computeNextId(list){ let m=0; list.forEach(it=>{ if(it.type==='person'&&it.id>m)m=it.id;}); return m+1; }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function fmtClock(m){ if(m==null||m>=9999) return '--'; let h=Math.floor(m/60)%24, mm=m%60; const ap=h<12?'ص':'م'; let h12=h%12; if(h12===0)h12=12; return h12+':'+(mm<10?'0':'')+mm+' '+ap; }
+function periodOf(m){ if(m==null||m>=9999) return ''; if(m<12*60) return 'صباحاً'; if(m<17*60) return 'عصراً'; return 'مساءً'; }
+function extractStart(text){
+  if(!text) return 9999;
+  let m=text.match(/(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)/);
+  if(m){ let h=+m[1],mm=+m[2],ap=m[3].toUpperCase(); if(ap==='PM'&&h!==12)h+=12; if(ap==='AM'&&h===12)h=0; return h*60+mm; }
+  m=text.match(/(\d{1,2}):(\d{2})\s*[\u064b-\u0652]*\s*(صباح|مساء|فجر|ظهر|منتصف)/);
+  if(m){ let h=+m[1],mm=+m[2]; if(m[3]==='مساء'&&h!==12)h+=12; if(m[3]==='منتصف')h=0; return h*60+mm; }
+  m=text.match(/(\d{1,2}):(\d{2})/); if(m) return (+m[1])*60+(+m[2]); return 9999;
+}
+
+async function loadData(){
+  initDates();
+  try{
+    const r = await fetch('/api/data');
+    if(r.ok){
+      const j = await r.json();
+      data = Array.isArray(j.data) ? j.data : [];
+      serverUpdatedAt = j.updatedAt || null;
+      nextId = computeNextId(data);
+      render();
+      startPolling();
+      return;
+    }
+  }catch(e){ syncState='error'; }
+  data = []; nextId = 1; render();
+}
+
+let pollTimer = null;
+function startPolling(){
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async ()=>{
+    if(editing || syncState==='saving') return;
+    try{
+      const r = await fetch('/api/data');
+      if(r.ok){
+        const j = await r.json();
+        if(j.updatedAt !== serverUpdatedAt && Array.isArray(j.data)){
+          serverUpdatedAt = j.updatedAt; data = j.data; nextId = computeNextId(data); render();
+        }
+      }
+    }catch(e){}
+  }, 15000);
+}
+
+async function saveData(){
+  if(!isAdmin || !adminToken){ render(); return; }
+  syncState='saving'; updateSync();
+  try{
+    const r = await fetch('/api/data', {
+      method:'PUT',
+      headers:{ 'Content-Type':'application/json', 'X-Admin-Token': adminToken },
+      body: JSON.stringify({ data })
+    });
+    if(r.status===401){
+      adminToken=null; isAdmin=false; try{ sessionStorage.removeItem('sched-token'); }catch(e){}
+      alert('انتهت جلسة الأدمن، الرجاء الدخول من جديد.');
+      syncState='idle'; updateSync(); render(); return;
+    }
+    if(r.ok){ const j=await r.json(); serverUpdatedAt=j.updatedAt||serverUpdatedAt; syncState='idle'; }
+    else syncState='error';
+  }catch(e){ syncState='error'; }
+  updateSync(); toast(); render();
+}
+
+async function adminLogin(){
+  const pw = prompt('أدخل كلمة سر الأدمن:');
+  if(pw===null) return;
+  try{
+    const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: pw }) });
+    if(r.ok){ const j=await r.json(); adminToken=j.token; isAdmin=true; try{ sessionStorage.setItem('sched-token', adminToken); }catch(e){} render(); }
+    else alert('كلمة السر غير صحيحة.');
+  }catch(e){ alert('تعذّر الاتصال بالخادم.'); }
+}
+async function adminLogout(){
+  try{ await fetch('/api/logout', { method:'POST', headers:{ 'X-Admin-Token': adminToken||'' } }); }catch(e){}
+  adminToken=null; isAdmin=false; try{ sessionStorage.removeItem('sched-token'); }catch(e){} editing=null; render();
+}
+
+async function exportData(){
+  if(!adminToken) return;
+  try{
+    const r = await fetch('/api/export', { headers:{ 'X-Admin-Token': adminToken } });
+    if(!r.ok){ alert('تعذّر التصدير.'); return; }
+    const blob = await r.blob(); const url = URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='schedule-export.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }catch(e){ alert('تعذّر التصدير.'); }
+}
+function importData(){
+  if(!adminToken) return;
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json,.json';
+  inp.onchange=async ()=>{
+    const f=inp.files[0]; if(!f) return;
+    try{
+      const parsed=JSON.parse(await f.text());
+      const arr=Array.isArray(parsed)?parsed:(Array.isArray(parsed.data)?parsed.data:null);
+      if(!arr){ alert('ملف غير صالح.'); return; }
+      const r=await fetch('/api/import',{ method:'POST', headers:{'Content-Type':'application/json','X-Admin-Token':adminToken}, body: JSON.stringify({ data: arr }) });
+      if(r.ok){ const j=await r.json(); serverUpdatedAt=j.updatedAt; data=arr; nextId=computeNextId(data); toast(); render(); }
+      else alert('تعذّر الاستيراد.');
+    }catch(e){ alert('ملف غير صالح.'); }
+  };
+  inp.click();
+}
+
+function updateSync(){
+  const el=document.getElementById('syncBadge'); if(!el) return;
+  if(syncState==='saving'){ el.style.display=''; el.textContent='جارٍ الحفظ…'; el.className='sync saving'; }
+  else if(syncState==='error'){ el.style.display=''; el.textContent='تعذّر الاتصال'; el.className='sync error'; }
+  else el.style.display='none';
+}
+function toast(){ const t=document.getElementById('toast'); t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1300); }
+
+function filteredPeople(){
+  return data.filter(it=> it.type==='person' && (teamFilter==='all' || teamOf(it)===teamFilter));
+}
+function countWorkingOnDay(d, team){
+  let n=0; data.forEach(it=>{ if(it.type==='person' && (team==='all'||teamOf(it)===team) && it.schedule[d].status==='work') n++; }); return n;
+}
+
+function openEdit(it){ if(!isAdmin) return; editing=JSON.parse(JSON.stringify(it)); render(); }
+
+function render(){
+  const ab=document.getElementById('adminBtn'); if(ab) ab.style.display = isAdmin ? 'none' : '';
+  const abar=document.getElementById('adminBar'); if(abar) abar.style.display = isAdmin ? 'flex' : 'none';
+  document.querySelectorAll('.admin-only').forEach(el=> el.style.display = isAdmin ? '' : 'none');
+  updateSync();
+  document.querySelectorAll('#viewSeg button').forEach(b=> b.classList.toggle('on', b.dataset.view===view));
+  renderTeams();
+  renderMonthBar();
+  renderDateTabs();
+  renderSearch();
+
+  document.getElementById('dayView').classList.toggle('hidden', view!=='day');
+  document.getElementById('tableView').classList.toggle('hidden', view!=='table');
+  document.getElementById('dayTabs').classList.toggle('hidden', view!=='day');
+  document.getElementById('monthBar').classList.toggle('hidden', view!=='day');
+
+  if(view==='day') renderDay(); else renderTable();
+  renderModal();
+}
+
+function renderMonthBar(){
+  const bar=document.getElementById('monthBar'); bar.innerHTML='';
+  if(view!=='day') return;
+  const prev=document.createElement('button'); prev.className='nav'; prev.textContent='‹';
+  prev.onclick=()=>{ shiftMonth(-1); };
+  const label=document.createElement('div'); label.className='label'; label.textContent=MONTH_NAMES[viewMonth]+' '+viewYear;
+  const next=document.createElement('button'); next.className='nav'; next.textContent='›';
+  next.onclick=()=>{ shiftMonth(1); };
+  const jump=document.createElement('button'); jump.className='today-jump'; jump.textContent='اليوم';
+  jump.onclick=()=>{ const n=new Date(); viewYear=n.getFullYear(); viewMonth=n.getMonth(); selectedDate=new Date(n.getFullYear(),n.getMonth(),n.getDate()); render(); };
+  bar.appendChild(next); bar.appendChild(label); bar.appendChild(prev); bar.appendChild(jump);
+}
+function shiftMonth(delta){
+  viewMonth+=delta;
+  if(viewMonth<0){ viewMonth=11; viewYear--; }
+  if(viewMonth>11){ viewMonth=0; viewYear++; }
+  // إبقاء التاريخ المختار ضمن الشهر
+  const dim=daysInMonth(viewYear,viewMonth);
+  let d = selectedDate ? Math.min(selectedDate.getDate(), dim) : 1;
+  selectedDate=new Date(viewYear, viewMonth, d);
+  render();
+}
+
+function renderDateTabs(){
+  const box=document.getElementById('dayTabs'); box.innerHTML='';
+  if(view!=='day') return;
+  const today=new Date();
+  const dim=daysInMonth(viewYear,viewMonth);
+  // إذا كان الشهر المعروض لا يحوي التاريخ المختار، عيّن أول يوم
+  if(!selectedDate || selectedDate.getMonth()!==viewMonth || selectedDate.getFullYear()!==viewYear){
+    selectedDate=new Date(viewYear, viewMonth, 1);
+  }
+  for(let d=1; d<=dim; d++){
+    const date=new Date(viewYear, viewMonth, d);
+    const wd=date.getDay();
+    const b=document.createElement('button');
+    const isSel=sameYMD(date, selectedDate);
+    const isToday=sameYMD(date, today);
+    b.className='day-tab'+(isSel?' on':'')+(isToday?' today':'');
+    const cnt=countWorkingOnDay(wd, teamFilter);
+    b.innerHTML='<span class="dnum">'+d+'</span>'+DAY_SHORT[wd]+(isToday?'<span class="now-badge">اليوم</span>':'')+'<span class="b">'+cnt+'</span>';
+    b.onclick=()=>{ selectedDate=date; render(); };
+    box.appendChild(b);
+  }
+  // مرّر إلى اليوم المختار
+  requestAnimationFrame(()=>{ const on=box.querySelector('.day-tab.on'); if(on&&on.scrollIntoView) on.scrollIntoView({inline:'center',block:'nearest'}); });
+}
+
+function renderSearch(){
+  const sel=document.getElementById('searchSelect');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— ابحث / اختر اسم داعية —</option>';
+  filteredPeople().slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(it=>{
+    const o=document.createElement('option'); o.value=String(it.id); o.textContent=it.name+' · '+TEAMS[teamOf(it)].label; sel.appendChild(o);
+  });
+  sel.value=cur;
+}
+
+function renderTeams(){
+  const box=document.getElementById('teams'); box.innerHTML='';
+  const all=document.createElement('button');
+  all.className='team-chip'+(teamFilter==='all'?' on':'');
+  if(teamFilter==='all') all.style.background='var(--ink)';
+  all.innerHTML='الكل <span class="num">'+data.filter(it=>it.type==='person').length+'</span>';
+  all.onclick=()=>{ teamFilter='all'; render(); };
+  box.appendChild(all);
+  Object.keys(TEAMS).forEach(k=>{
+    const cnt=data.filter(it=>it.type==='person'&&teamOf(it)===k).length;
+    const b=document.createElement('button');
+    const on=teamFilter===k;
+    b.className='team-chip'+(on?' on':'');
+    if(on) b.style.background=TEAMS[k].hex;
+    b.innerHTML='<span class="dot" style="background:'+(on?'#fff':TEAMS[k].hex)+'"></span>'+TEAMS[k].label+' <span class="num">'+cnt+'</span>';
+    b.onclick=()=>{ teamFilter=k; render(); };
+    box.appendChild(b);
+  });
+}
+
+function renderDay(){
+  const wrap=document.getElementById('dayView'); wrap.innerHTML='';
+  const wd = selectedDate ? selectedDate.getDay() : todayIndex();
+  const working=[], off=[], unknown=[];
+  filteredPeople().forEach(it=>{
+    const c=it.schedule[wd];
+    if(c.status==='work') working.push({it,c});
+    else if(c.status==='off') off.push(it); else unknown.push(it);
+  });
+  working.sort((a,b)=>(a.c.start_min||9999)-(b.c.start_min||9999));
+
+  const dstr = selectedDate ? (selectedDate.getDate()+' '+MONTH_NAMES[selectedDate.getMonth()]+' '+selectedDate.getFullYear()) : '';
+  document.getElementById('countLine').innerHTML=DAY_LABELS[wd]+' · '+dstr+' · <b>'+working.length+'</b> داعية على رأس العمل';
+
+  if(!working.length && !off.length && !unknown.length){ wrap.innerHTML='<div class="empty">لا يوجد دعاة</div>'; return; }
+
+  const grid=document.createElement('div'); grid.className='cards';
+  working.forEach(({it,c})=> grid.appendChild(dayCard(it,c)));
+  wrap.appendChild(grid);
+
+  if(off.length||unknown.length){
+    const sec=document.createElement('div'); sec.className='off-wrap';
+    const t=document.createElement('div'); t.className='off-title'; t.textContent='ليسوا على رأس العمل'; sec.appendChild(t);
+    const chips=document.createElement('div'); chips.className='off-chips';
+    [...off.map(x=>[x,'راحة']),...unknown.map(x=>[x,'غير محدد'])].forEach(([it,lbl])=>{
+      const c=document.createElement('span'); c.className='off-chip';
+      c.innerHTML='<span class="dot" style="background:'+TEAMS[teamOf(it)].hex+'"></span>'+esc(it.name)+' · '+lbl;
+      c.onclick=()=>{ openEdit(it); };
+      chips.appendChild(c);
+    });
+    sec.appendChild(chips); wrap.appendChild(sec);
+  }
+}
+function dayCard(it,c){
+  const tm=TEAMS[teamOf(it)];
+  const card=document.createElement('div'); card.className='pcard';
+  card.style.setProperty('--team-color',tm.hex);
+  card.style.setProperty('--team-soft',tm.soft);
+  card.innerHTML =
+    '<div class="clock"><div class="t">'+fmtClock(c.start_min)+'</div><div class="p">'+periodOf(c.start_min)+'</div></div>'+
+    '<div class="info"><div class="nm">'+esc(it.name)+'</div><div class="tm">'+esc(c.text)+'</div>'+
+    '<span class="team-tag">'+tm.label+'</span></div>';
+  if(isAdmin){ const eb=document.createElement('button'); eb.className='edit'; eb.textContent='تعديل'; eb.onclick=()=>{ openEdit(it); }; card.appendChild(eb); }
+  return card;
+}
+
+function renderTable(){
+  const wrap=document.getElementById('tableView'); wrap.innerHTML='';
+  document.getElementById('countLine').innerHTML='إجمالي: <b>'+filteredPeople().length+'</b> داعية';
+  const ti=todayIndex();
+  const scroll=document.createElement('div'); scroll.className='table-scroll';
+  const table=document.createElement('table');
+  let head='<thead><tr><th class="name-col">الاسم</th>';
+  DAY_SHORT.forEach((d,i)=>{ head+='<th'+(i===ti?' class="today-col"':'')+'>'+d+'</th>'; });
+  head+='<th class="act-col"></th></tr></thead>';
+  table.innerHTML=head;
+  const tb=document.createElement('tbody');
+  const ppl=filteredPeople();
+  if(!ppl.length){ wrap.innerHTML='<div class="empty">لا يوجد دعاة</div>'; return; }
+  ppl.forEach(it=>{
+    const tm=TEAMS[teamOf(it)];
+    const tr=document.createElement('tr');
+    const nameTd=document.createElement('td'); nameTd.className='name-cell';
+    nameTd.innerHTML='<span class="dot" style="background:'+tm.hex+'"></span>'+esc(it.name);
+    tr.appendChild(nameTd);
+    it.schedule.forEach((c,i)=>{
+      const td=document.createElement('td'); if(i===ti) td.className='today-col';
+      if(c.status==='work'){
+        const ranges=rangeLines(c.text);
+        if(ranges.length){
+          const wrap=document.createElement('div'); wrap.className='cellwrap';
+          ranges.forEach(r=>{
+            const p=document.createElement('div'); p.className='pill work'; p.style.background=tm.hex;
+            const s=document.createElement('span'); s.className='rl'; s.innerHTML=r;
+            p.appendChild(s);
+            wrap.appendChild(p);
+          });
+          td.appendChild(wrap);
+        } else {
+          const p=document.createElement('div'); p.className='pill work'; p.style.background=tm.hex; p.textContent='دوام'; td.appendChild(p);
+        }
+      } else {
+        const p=document.createElement('div'); p.className='pill '+c.status; p.textContent=(c.status==='off'?'راحة':'؟'); td.appendChild(p);
+      }
+      tr.appendChild(td);
+    });
+    const act=document.createElement('td'); act.className='act-cell';
+    if(isAdmin){ const eb=document.createElement('button'); eb.className='icon-btn'; eb.textContent='تعديل'; eb.onclick=()=>{ openEdit(it); }; act.appendChild(eb); }
+    tr.appendChild(act);
+    tb.appendChild(tr);
+  });
+  table.appendChild(tb); scroll.appendChild(table); wrap.appendChild(scroll);
+}
+function hm(min){ let h=Math.floor(min/60)%24, mm=min%60; const ap=(h<12?'AM':'PM'); let h12=h%12; if(h12===0)h12=12; return { t:(h12<10?'0':'')+h12+':'+(mm<10?'0':'')+mm, ap }; }
+function timeHtml(min){ const o=hm(min); return '<span class="tk">'+o.t+'\u2009<span class="ap">'+o.ap+'</span></span>'; }
+function parseAllIntervals(text){
+  if(!text) return [];
+  const out=[];
+  const eng=[...text.matchAll(/(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)/g)];
+  if(eng.length){
+    const times=eng.map(x=>{ let h=+x[1],mm=+x[2],ap=x[3].toUpperCase(); if(ap==='PM'&&h!==12)h+=12; if(ap==='AM'&&h===12)h=0; return h*60+mm; });
+    for(let i=0;i+1<times.length;i+=2){ let s=times[i],e=times[i+1]; out.push([s,e]); }
+    if(times.length%2===1) out.push([times[times.length-1], null]);
+    return out;
+  }
+  const ar=[...text.matchAll(/(\d{1,2}):(\d{2})\s*[\u064b-\u0652]*\s*(صباح|مساء|فجر|ظهر|منتصف)?/g)].filter(x=>x[1]);
+  if(ar.length){
+    const times=ar.map(x=>{ let h=+x[1],mm=+x[2],per=x[3]; if(per==='مساء'&&h!==12)h+=12; if(per==='منتصف')h=0; return h*60+mm; });
+    for(let i=0;i+1<times.length;i+=2){ let s=times[i],e=times[i+1]; out.push([s,e]); }
+    if(times.length%2===1) out.push([times[times.length-1], null]);
+    return out;
+  }
+  return [];
+}
+function rangeLines(text){
+  const ivs=parseAllIntervals(text).slice().sort((a,b)=> (a[0]) - (b[0]));
+  return ivs.map(([s,e])=>{
+    const inner = (e==null) ? timeHtml(s) : (timeHtml(s)+'<span class="sep2">-</span>'+timeHtml(e));
+    return '<span class="rng">'+inner+'</span>';
+  });
+}
+
+function renderModal(){
+  const root=document.getElementById('modalRoot'); root.innerHTML=''; if(!editing) return;
+  const ov=document.createElement('div'); ov.className='overlay';
+  ov.onclick=(e)=>{ if(e.target===ov){ editing=null; render(); } };
+  const sh=document.createElement('div'); sh.className='sheet';
+  sh.innerHTML='<h3>تعديل بيانات الداعية</h3>';
+
+  const nl=document.createElement('label'); nl.textContent='الاسم'; sh.appendChild(nl);
+  const ni=document.createElement('input'); ni.type='text'; ni.value=editing.name; sh.appendChild(ni);
+
+  const tl=document.createElement('label'); tl.textContent='الفريق'; sh.appendChild(tl);
+  const tsel=document.createElement('select');
+  Object.keys(TEAMS).forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=TEAMS[k].label; if(teamOf(editing)===k)o.selected=true; tsel.appendChild(o); });
+  tsel.onchange=()=>{ editing.lang=tsel.value; };
+  sh.appendChild(tsel);
+
+  const dl=document.createElement('label'); dl.textContent='أوقات الأيام'; sh.appendChild(dl);
+  DAY_LABELS.forEach((dn,idx)=>{
+    const row=document.createElement('div'); row.className='drow';
+    const lab=document.createElement('div'); lab.className='dl'; lab.textContent=dn; row.appendChild(lab);
+    const sel=document.createElement('select');
+    [['work','دوام'],['off','راحة'],['unknown','غير محدد']].forEach(([v,t])=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; if(editing.schedule[idx].status===v)o.selected=true; sel.appendChild(o); });
+    const ti=document.createElement('input'); ti.type='text'; ti.placeholder='6:00 PM إلى 10:00PM';
+    ti.value=editing.schedule[idx].text||''; ti.style.display=editing.schedule[idx].status==='work'?'block':'none';
+    sel.onchange=()=>{ editing.schedule[idx].status=sel.value; ti.style.display=sel.value==='work'?'block':'none'; if(sel.value!=='work'){ editing.schedule[idx].text=''; editing.schedule[idx].start_min=9999; } };
+    ti.oninput=()=>{ editing.schedule[idx].text=ti.value; editing.schedule[idx].start_min=extractStart(ti.value); };
+    row.appendChild(sel); row.appendChild(ti); sh.appendChild(row);
+  });
+
+  const foot=document.createElement('div'); foot.className='sheet-foot';
+  const sv=document.createElement('button'); sv.className='btn btn-brand'; sv.textContent='حفظ';
+  sv.onclick=()=>{ const i=data.findIndex(d=>d.type==='person'&&d.id===editing.id); if(i>-1){ data[i].name=ni.value.trim()||editing.name; data[i].lang=editing.lang||'en'; data[i].schedule=editing.schedule; } editing=null; saveData(); };
+  const cx=document.createElement('button'); cx.className='btn'; cx.textContent='إلغاء';
+  cx.onclick=()=>{ editing=null; render(); };
+  foot.appendChild(sv); foot.appendChild(cx); sh.appendChild(foot);
+
+  const del=document.createElement('button'); del.className='del-btn'; del.textContent='حذف هذا الداعية';
+  del.onclick=()=>{ if(confirm('حذف "'+editing.name+'" نهائياً؟')){ data=data.filter(d=>!(d.type==='person'&&d.id===editing.id)); editing=null; saveData(); } };
+  sh.appendChild(del);
+
+  ov.appendChild(sh); root.appendChild(ov);
+}
+
+document.querySelectorAll('#viewSeg button').forEach(b=> b.onclick=()=>{ view=b.dataset.view; render(); });
+document.getElementById('searchSelect').addEventListener('change', (e)=>{
+  const id=+e.target.value;
+  if(id && isAdmin){ const it=data.find(x=>x.type==='person'&&x.id===id); if(it) openEdit(it); }
+  e.target.value='';
+});
+document.getElementById('adminBtn').onclick=adminLogin;
+document.getElementById('logoutBtn').onclick=adminLogout;
+document.getElementById('exportBtn').onclick=exportData;
+document.getElementById('importBtn').onclick=importData;
+document.getElementById('addBtn').onclick=()=>{
+  if(!isAdmin) return;
+  const np={ type:'person', id:nextId++, name:'داعية جديد', lang:(teamFilter!=='all'?teamFilter:'en'), schedule:DAY_LABELS.map(()=>({status:'unknown',text:'',start_min:9999})) };
+  data.push(np); editing=JSON.parse(JSON.stringify(np)); render();
+};
+document.getElementById('resetBtn').onclick=async ()=>{
+  if(!isAdmin||!adminToken) return;
+  if(confirm('استعادة القائمة الأصلية وحذف كل التعديلات؟')){
+    try{ const r=await fetch('/api/reset',{method:'POST',headers:{'X-Admin-Token':adminToken}}); if(r.ok){ const j=await r.json(); data=j.data; serverUpdatedAt=j.updatedAt; nextId=computeNextId(data); editing=null; toast(); render(); } else alert('تعذّر.'); }catch(e){ alert('تعذّر.'); }
+  }
+};
+
+loadData();
+</script>
+</body>
+</html>
